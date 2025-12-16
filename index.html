@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>抖店保本投产比计算器</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Input focus ring animation */
+        input:focus-within ~ .icon-wrapper { color: #3b82f6; }
+        
+        /* Smooth transitions */
+        .transition-all-300 { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div class="min-h-screen flex justify-center pb-24">
+        <div class="w-full max-w-lg bg-white min-h-screen shadow-xl flex flex-col relative">
+            
+            <!-- Header -->
+            <header class="bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-5 sticky top-0 z-20">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-200">
+                            <i data-lucide="calculator" class="w-5 h-5"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">抖店保本计算器</h1>
+                    </div>
+                    <button onclick="resetCalculator()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors" title="重置">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 space-y-8">
+                
+                <!-- Inputs Section -->
+                <section class="space-y-5">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="tag" class="w-3.5 h-3.5"></i> 基础数据输入
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Selling Price (Full Width) -->
+                        <div class="col-span-2 space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-600">商品售价</label>
+                            <div class="relative rounded-xl shadow-sm group">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none icon-wrapper text-slate-400 transition-colors">
+                                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="sellingPrice" placeholder="0.00" inputmode="decimal" step="0.01" class="block w-full pl-11 pr-8 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-900 placeholder-slate-300 text-lg font-semibold outline-none" oninput="calculate()">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 text-sm font-medium">¥</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Cost -->
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-600">拿货成本</label>
+                            <div class="relative rounded-xl shadow-sm group">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none icon-wrapper text-slate-400 transition-colors">
+                                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="productCost" placeholder="0.00" inputmode="decimal" step="0.01" class="block w-full pl-11 pr-8 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-900 placeholder-slate-300 text-lg font-semibold outline-none" oninput="calculate()">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 text-sm font-medium">¥</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Cost -->
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-600">快递成本</label>
+                            <div class="relative rounded-xl shadow-sm group">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none icon-wrapper text-slate-400 transition-colors">
+                                    <i data-lucide="truck" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="shippingCost" value="3" placeholder="0.00" inputmode="decimal" step="0.01" class="block w-full pl-11 pr-8 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-900 placeholder-slate-300 text-lg font-semibold outline-none" oninput="calculate()">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 text-sm font-medium">¥</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commission -->
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-600">平台扣点</label>
+                            <div class="relative rounded-xl shadow-sm group">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none icon-wrapper text-slate-400 transition-colors">
+                                    <i data-lucide="percent" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="commissionRate" value="5" placeholder="0" inputmode="decimal" step="0.01" class="block w-full pl-11 pr-8 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-900 placeholder-slate-300 text-lg font-semibold outline-none" oninput="calculate()">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 text-sm font-medium">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ad Spend -->
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-600">计划推广费</label>
+                            <div class="relative rounded-xl shadow-sm group">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none icon-wrapper text-slate-400 transition-colors">
+                                    <i data-lucide="megaphone" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="adSpend" placeholder="0.00" inputmode="decimal" step="0.01" class="block w-full pl-11 pr-8 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-900 placeholder-slate-300 text-lg font-semibold outline-none" oninput="calculate()">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 text-sm font-medium">¥</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Results Section -->
+                <section class="space-y-5">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i> 实时利润分析
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Break Even ROI (Highlighted) -->
+                        <div class="col-span-2 p-5 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 border border-transparent text-white shadow-lg shadow-blue-200 flex flex-col justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider mb-1 text-blue-100/80">保本投产比 (ROI)</span>
+                            <div class="flex items-baseline gap-2">
+                                <span id="resBreakEvenROI" class="text-4xl font-bold tracking-tight">0.00</span>
+                                <span id="resBreakEvenDesc" class="text-sm font-medium text-blue-100 opacity-80"></span>
+                            </div>
+                        </div>
+
+                        <!-- Gross Profit -->
+                        <div id="cardGrossProfit" class="p-4 rounded-2xl border border-slate-100 bg-white flex flex-col justify-between transition-colors duration-200">
+                            <span id="labelGrossProfit" class="text-xs font-bold uppercase tracking-wider mb-1 text-slate-500">单单毛利</span>
+                            <span id="resGrossProfit" class="text-2xl font-bold tracking-tight text-slate-900">¥0.00</span>
+                        </div>
+
+                        <!-- Platform Fee -->
+                        <div class="p-4 rounded-2xl border border-slate-100 bg-white flex flex-col justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider mb-1 text-slate-500">平台扣费</span>
+                            <span id="resPlatformFee" class="text-2xl font-bold tracking-tight text-slate-900">¥0.00</span>
+                        </div>
+
+                        <!-- Net Profit -->
+                        <div id="cardNetProfit" class="p-4 rounded-2xl border border-slate-100 bg-white flex flex-col justify-between transition-colors duration-200">
+                            <span id="labelNetProfit" class="text-xs font-bold uppercase tracking-wider mb-1 text-slate-500">净利润</span>
+                            <span id="resNetProfit" class="text-2xl font-bold tracking-tight text-slate-900">¥0.00</span>
+                        </div>
+
+                        <!-- Net Profit Margin -->
+                        <div id="cardProfitMargin" class="p-4 rounded-2xl border border-slate-100 bg-white flex flex-col justify-between transition-colors duration-200">
+                            <span id="labelProfitMargin" class="text-xs font-bold uppercase tracking-wider mb-1 text-slate-500">净利润率</span>
+                            <span id="resProfitMargin" class="text-2xl font-bold tracking-tight text-slate-900">0.00%</span>
+                        </div>
+                    </div>
+
+                    <!-- Insight Box -->
+                    <div id="insightBox" class="hidden bg-blue-50 text-blue-800 text-sm p-4 rounded-xl border border-blue-100 flex items-start gap-3 leading-relaxed">
+                        <div class="mt-0.5 shrink-0 text-blue-600"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+                        <p id="insightText">
+                            当您的推广 ROI 达到 <span class="font-bold">0.00</span> 时，
+                            每单花费 <span class="font-bold">¥0.00</span> 广告费即可保本。
+                        </p>
+                    </div>
+                     <!-- Error Box -->
+                    <div id="errorBox" class="hidden bg-rose-50 text-rose-700 text-sm p-4 rounded-xl border border-rose-100 flex items-start gap-3 leading-relaxed">
+                        <div class="mt-0.5 shrink-0"><i data-lucide="alert-triangle" class="w-4 h-4"></i></div>
+                        <p>当前定价毛利为负，无法计算保本投产比，请调整售价或降低成本。</p>
+                    </div>
+
+                </section>
+            </main>
+
+            <!-- Sticky Footer -->
+            <footer class="fixed bottom-0 w-full max-w-lg bg-white border-t border-slate-200 p-4 pb-8 z-30">
+                <button onclick="copyResults()" id="copyBtn" class="w-full py-4 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all-300 transform active:scale-[0.98] shadow-lg bg-slate-900 hover:bg-slate-800 text-white shadow-slate-300">
+                    <span id="iconCopy"><i data-lucide="copy" class="w-6 h-6"></i></span>
+                    <span id="iconCheck" class="hidden"><i data-lucide="check-circle-2" class="w-6 h-6"></i></span>
+                    <span id="copyText">复制计算结果</span>
+                </button>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const DEFAULT_COMMISSION = 5;
+        const DEFAULT_SHIPPING = 3;
+
+        // Element References
+        const els = {
+            inputs: {
+                sellingPrice: document.getElementById('sellingPrice'),
+                productCost: document.getElementById('productCost'),
+                shippingCost: document.getElementById('shippingCost'),
+                commissionRate: document.getElementById('commissionRate'),
+                adSpend: document.getElementById('adSpend'),
+            },
+            outputs: {
+                breakEvenROI: document.getElementById('resBreakEvenROI'),
+                breakEvenDesc: document.getElementById('resBreakEvenDesc'),
+                grossProfit: document.getElementById('resGrossProfit'),
+                platformFee: document.getElementById('resPlatformFee'),
+                netProfit: document.getElementById('resNetProfit'),
+                profitMargin: document.getElementById('resProfitMargin'),
+                
+                cardGrossProfit: document.getElementById('cardGrossProfit'),
+                labelGrossProfit: document.getElementById('labelGrossProfit'),
+                cardNetProfit: document.getElementById('cardNetProfit'),
+                labelNetProfit: document.getElementById('labelNetProfit'),
+                cardProfitMargin: document.getElementById('cardProfitMargin'),
+                labelProfitMargin: document.getElementById('labelProfitMargin'),
+                
+                insightBox: document.getElementById('insightBox'),
+                insightText: document.getElementById('insightText'),
+                errorBox: document.getElementById('errorBox')
+            },
+            copy: {
+                btn: document.getElementById('copyBtn'),
+                iconCopy: document.getElementById('iconCopy'),
+                iconCheck: document.getElementById('iconCheck'),
+                text: document.getElementById('copyText')
+            }
+        };
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Formatters
+        const fmtMoney = (n) => '¥' + n.toFixed(2);
+        const fmtPct = (n) => n.toFixed(2) + '%';
+        const fmtNum = (n) => n.toFixed(2);
+
+        // Styling Definitions
+        const Styles = {
+            neutral: { card: 'bg-white border-slate-100', text: 'text-slate-900', label: 'text-slate-500' },
+            success: { card: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700', label: 'text-emerald-600/80' },
+            danger: { card: 'bg-rose-50 border-rose-100', text: 'text-rose-700', label: 'text-rose-600/80' },
+            warning: { card: 'bg-amber-50 border-amber-100', text: 'text-amber-700', label: 'text-amber-600/80' }
+        };
+
+        function setCardStyle(cardEl, labelEl, textEl, type) {
+            const s = Styles[type] || Styles.neutral;
+            cardEl.className = `p-4 rounded-2xl border flex flex-col justify-between transition-colors duration-200 ${s.card}`;
+            labelEl.className = `text-xs font-bold uppercase tracking-wider mb-1 ${s.label}`;
+            textEl.className = `text-2xl font-bold tracking-tight ${s.text}`;
+        }
+
+        // Main Calculation Function
+        function calculate() {
+            const price = parseFloat(els.inputs.sellingPrice.value) || 0;
+            const cost = parseFloat(els.inputs.productCost.value) || 0;
+            const shipping = parseFloat(els.inputs.shippingCost.value) || 0;
+            const rate = parseFloat(els.inputs.commissionRate.value) || 0;
+            const adSpend = parseFloat(els.inputs.adSpend.value) || 0;
+
+            const platformFee = price * (rate / 100);
+            const grossProfit = price - cost - shipping - platformFee;
+            
+            // Break-even ROI = Revenue / Gross Profit
+            let breakEvenROI = 0;
+            let isInfiniteROI = false;
+            
+            if (grossProfit > 0) {
+                breakEvenROI = price / grossProfit;
+            } else {
+                isInfiniteROI = true;
+            }
+
+            const netProfit = grossProfit - adSpend;
+            const netProfitMargin = price > 0 ? (netProfit / price) * 100 : 0;
+
+            // Update Text
+            els.outputs.platformFee.textContent = fmtMoney(platformFee);
+            els.outputs.grossProfit.textContent = fmtMoney(grossProfit);
+            
+            if (grossProfit <= 0 && price > 0) {
+                 els.outputs.breakEvenROI.textContent = '∞';
+                 els.outputs.breakEvenDesc.textContent = '(毛利过低)';
+            } else {
+                 els.outputs.breakEvenROI.textContent = fmtNum(breakEvenROI);
+                 els.outputs.breakEvenDesc.textContent = '';
+            }
+
+            els.outputs.netProfit.textContent = fmtMoney(netProfit);
+            els.outputs.profitMargin.textContent = fmtPct(netProfitMargin);
+
+            // Update Styles based on positive/negative values
+            setCardStyle(els.outputs.cardGrossProfit, els.outputs.labelGrossProfit, els.outputs.grossProfit, grossProfit > 0 ? 'success' : 'danger');
+            setCardStyle(els.outputs.cardNetProfit, els.outputs.labelNetProfit, els.outputs.netProfit, netProfit >= 0 ? 'success' : 'danger');
+            
+            // Margin is warning if positive (okay but could be better), danger if negative
+            setCardStyle(els.outputs.cardProfitMargin, els.outputs.labelProfitMargin, els.outputs.profitMargin, netProfitMargin >= 0 ? 'warning' : 'danger');
+
+            // Logic for Info/Error Boxes
+            if (price > 0 && grossProfit <= 0) {
+                els.outputs.insightBox.classList.add('hidden');
+                els.outputs.errorBox.classList.remove('hidden');
+            } else if (grossProfit > 0) {
+                els.outputs.errorBox.classList.add('hidden');
+                els.outputs.insightBox.classList.remove('hidden');
+                els.outputs.insightText.innerHTML = `当您的推广 ROI 达到 <span class="font-bold">${fmtNum(breakEvenROI)}</span> 时，每单花费 <span class="font-bold">${fmtMoney(grossProfit)}</span> 广告费即可保本。`;
+            } else {
+                els.outputs.insightBox.classList.add('hidden');
+                els.outputs.errorBox.classList.add('hidden');
+            }
+        }
+
+        // Reset Function
+        function resetCalculator() {
+            els.inputs.sellingPrice.value = '';
+            els.inputs.productCost.value = '';
+            els.inputs.shippingCost.value = DEFAULT_SHIPPING;
+            els.inputs.commissionRate.value = DEFAULT_COMMISSION;
+            els.inputs.adSpend.value = '';
+            calculate();
+        }
+
+        // Copy Function
+        async function copyResults() {
+            const price = els.inputs.sellingPrice.value || '0';
+            const cost = els.inputs.productCost.value || '0';
+            const shipping = els.inputs.shippingCost.value || '0';
+            const rate = els.inputs.commissionRate.value || '0';
+            const adSpend = els.inputs.adSpend.value || '0';
+            
+            const gross = els.outputs.grossProfit.textContent;
+            const roi = els.outputs.breakEvenROI.textContent;
+            const net = els.outputs.netProfit.textContent;
+            const margin = els.outputs.profitMargin.textContent;
+
+            const text = `【抖店利润分析】
+商品售价: ${price}元
+拿货成本: ${cost}元
+快递成本: ${shipping}元
+平台扣点: ${rate}%
+计划推广: ${adSpend}元
+----------------
+单单毛利: ${gross}
+保本ROI: ${roi}
+净利润: ${net}
+净利率: ${margin}`;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                
+                // Visual Feedback
+                const { btn, iconCopy, iconCheck, text: label } = els.copy;
+                
+                const originalClass = "w-full py-4 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all-300 transform active:scale-[0.98] shadow-lg bg-slate-900 hover:bg-slate-800 text-white shadow-slate-300";
+                const successClass = "w-full py-4 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all-300 transform active:scale-[0.98] shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200";
+                
+                btn.className = successClass;
+                iconCopy.classList.add('hidden');
+                iconCheck.classList.remove('hidden');
+                label.textContent = "已复制结果";
+                
+                setTimeout(() => {
+                    btn.className = originalClass;
+                    iconCopy.classList.remove('hidden');
+                    iconCheck.classList.add('hidden');
+                    label.textContent = "复制计算结果";
+                }, 2000);
+
+            } catch (err) {
+                console.error('Copy failed', err);
+                alert('复制失败，请手动截图');
+            }
+        }
+        
+        // Initial Calculation
+        calculate();
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
